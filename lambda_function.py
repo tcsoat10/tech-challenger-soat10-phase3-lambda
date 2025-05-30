@@ -1,5 +1,6 @@
 from http import HTTPStatus
 import os
+import json
 from cognito_service import CognitoService
 from package.pycpfcnpj.cpfcnpj import validate as validate_cpf_cnpj
 
@@ -13,7 +14,8 @@ def validate_cpf(cpf_value: str) -> bool:
         return False
 
 def lambda_handler(event, context):
-    cpf = event.get('cpf')
+    data = json.loads(event['body'])
+    cpf = data.get('cpf')
 
     if not cpf:
         return {
