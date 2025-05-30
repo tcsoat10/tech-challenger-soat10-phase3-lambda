@@ -4,7 +4,7 @@ import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from main import validate_cpf
+from lambda_handler import validate_cpf
 
 class TestCPFValidation(unittest.TestCase):
     def test_valid_cpf(self):

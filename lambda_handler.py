@@ -12,7 +12,7 @@ def validate_cpf(cpf_value: str) -> bool:
     except Exception:
         return False
 
-def handler(event, context):
+def lambda_handler(event, context):
     cpf = event.get('cpf')
 
     if not cpf:
