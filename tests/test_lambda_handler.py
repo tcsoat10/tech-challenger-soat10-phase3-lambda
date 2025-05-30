@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 from http import HTTPStatus
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-import main
+import lambda_handler
 
 class TestLambdaHandler(unittest.TestCase):
     @patch('main.CognitoService')
@@ -14,7 +14,7 @@ class TestLambdaHandler(unittest.TestCase):
         event = {}
         context = {}
         
-        result = main.handler(event, context)
+        result = lambda_handler.handler(event, context)
         
         self.assertEqual(result['statusCode'], 400)
         self.assertEqual(result['body'], 'Missing CPF')
@@ -27,7 +27,7 @@ class TestLambdaHandler(unittest.TestCase):
         context = {}
         mock_validate_cpf.return_value = False
         
-        result = main.handler(event, context)
+        result = lambda_handler.handler(event, context)
         
         self.assertEqual(result['statusCode'], 400)
         self.assertEqual(result['body'], 'Invalid CPF')
@@ -46,7 +46,7 @@ class TestLambdaHandler(unittest.TestCase):
         mock_cognito_instance.exists_user_in_user_pool.return_value = True
         mock_cognito_service.return_value = mock_cognito_instance
         
-        result = main.handler(event, context)
+        result = lambda_handler.handler(event, context)
         
         self.assertEqual(result['statusCode'], HTTPStatus.OK)
         self.assertEqual(result['body'], 'User exists')
@@ -65,7 +65,7 @@ class TestLambdaHandler(unittest.TestCase):
         mock_cognito_instance.exists_user_in_user_pool.return_value = False
         mock_cognito_service.return_value = mock_cognito_instance
         
-        result = main.handler(event, context)
+        result = lambda_handler.handler(event, context)
         
         self.assertEqual(result['statusCode'], HTTPStatus.NOT_FOUND)
         self.assertEqual(result['body'], 'User does not exist')
@@ -83,7 +83,7 @@ class TestLambdaHandler(unittest.TestCase):
         mock_cognito_instance.exists_user_in_user_pool.side_effect = Exception("Service error")
         mock_cognito_service.return_value = mock_cognito_instance
         
-        result = main.handler(event, context)
+        result = lambda_handler.handler(event, context)
         
         self.assertEqual(result['statusCode'], HTTPStatus.INTERNAL_SERVER_ERROR)
         self.assertEqual(result['body'], "Service error")
