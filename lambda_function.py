@@ -40,7 +40,7 @@ def lambda_handler(event, context):
     
     try:
         exists_user = cognito_service.exists_user_in_user_pool(cpf)
-        if exists_user:
+        if exists_user is True:
             return {
                 'statusCode': HTTPStatus.OK.value,
                 'body': 'User exists'
