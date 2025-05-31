@@ -18,3 +18,36 @@ class CognitoService:
             return "The user does not exist."
         except Exception as e:
             return str(e)
+    
+    def create_user_in_user_pool(self, user_data: dict):
+        name = user_data.get('name')
+        email = user_data.get('email')
+        username = user_data.get('cpf')
+        birthdate = user_data.get('birthdate')
+        try:
+            response = self.cognito_client.admin_create_user(
+                UserPoolId=self.user_pool_id,
+                Username=username,
+                UserAttributes=[
+                    {
+                        'Name': 'email',
+                        'Value': email
+                    },
+                    {
+                        'Name': 'name',
+                        'Value': name
+                    },
+                    {
+                        'Name': 'birthdate',
+                        'Value': birthdate
+                    },
+                    {
+                        'Name': 'preferred_username',
+                        'Value': username
+                    }
+                ],
+                MessageAction='SUPPRESS'  # Suppress the welcome message
+            )
+            return True
+        except Exception as e:
+            return str(e)
