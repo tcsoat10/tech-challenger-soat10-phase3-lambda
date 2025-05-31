@@ -68,7 +68,30 @@ jobs:
               --zip-file fileb://lambda-package.zip \
               --environment "Variables={USER_POOL_ID=${{ secrets.USER_POOL_ID }}}"
           fi
-          
+      
+      - name: Wait for Lambda update to complete
+        run: |
+          echo "Waiting for the update to complete..."
+          STATUS="InProgress"
+          ATTEMPTS=0
+          while [[ "$STATUS" == "InProgress" && $ATTEMPTS -lt 12 ]]; do
+            STATUS=$(aws lambda get-function-configuration \
+              --function-name ${{ secrets.LAMBDA_FUNCTION_NAME }} \
+              --query 'LastUpdateStatus' \
+              --output text)
+            echo "Status atual: $STATUS"
+            if [ "$STATUS" == "Successful" ]; then
+              break
+            fi
+            sleep 10
+            ATTEMPTS=$((ATTEMPTS + 1))
+          done
+
+          if [ "$STATUS" != "Successful" ]; then
+            echo "The previous update wasn't completed successfully. Final status: $STATUS"
+            exit 1
+          fi
+
             
       - name: Update Lambda configuration
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
