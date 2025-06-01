@@ -1,4 +1,5 @@
 from http import HTTPStatus
+import logging
 import os
 import json
 from cognito_service import CognitoService
@@ -32,10 +33,9 @@ def handle_create_user(cognito_service: CognitoService, data: dict):
             new_user = cognito_service.create_user_in_user_pool(data)
             if new_user is True:
                 return build_response(HTTPStatus.CREATED.value, 'User created successfully')
-            
-            return build_response(HTTPStatus.INTERNAL_SERVER_ERROR.value, 'Error creating user')
     except Exception as e:
-        return build_response(HTTPStatus.INTERNAL_SERVER_ERROR.value, f'Error checking user: {str(e)}')
+        logging.exception(f'Error checking user: {str(e)}')
+        raise
 
 def handle_login_user(cognito_service: CognitoService, data: dict):
     cpf = data.get('cpf')
@@ -52,7 +52,8 @@ def handle_login_user(cognito_service: CognitoService, data: dict):
         else:
             return build_response(HTTPStatus.NOT_FOUND.value, 'User does not exist')
     except Exception as e:
-        return build_response(HTTPStatus.INTERNAL_SERVER_ERROR.value, f'Error checking user: {str(e)}')
+        logging.exception(f'Error checking user: {str(e)}')
+        raise
 
 def lambda_handler(event, context):
     data = json.loads(event['body'])

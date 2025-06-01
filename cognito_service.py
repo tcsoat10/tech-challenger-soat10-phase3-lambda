@@ -1,3 +1,4 @@
+import logging
 import boto3
 
 class CognitoService:
@@ -50,4 +51,5 @@ class CognitoService:
             )
             return True
         except Exception as e:
-            return str(e)
+            logging.exception(f'Error creating user: {str(e)}')
+            raise
