@@ -13,82 +13,62 @@ def validate_cpf(cpf_value: str) -> bool:
     except Exception:
         return False
 
+REQUIRED_FIELDS_CREATE_USER = ['name', 'email', 'birthdate', 'cpf']
+REQUIRED_FIELDS_LOGIN_USER = ['cpf']
+
+def build_response(status_code, body):
+    return {
+        'statusCode': status_code,
+        'body': body
+    }
+
+def handle_create_user(cognito_service: CognitoService, data: dict):
+    cpf = data.get('cpf')
+    try:
+        exists_user = cognito_service.exists_user_in_user_pool(cpf)
+        if exists_user is True:
+            return build_response(HTTPStatus.CONFLICT.value, 'User already exists, log in with CPF')
+        else:
+            new_user = cognito_service.create_user_in_user_pool(data)
+            if new_user is True:
+                return build_response(HTTPStatus.CREATED.value, 'User created successfully')
+            
+            return build_response(HTTPStatus.INTERNAL_SERVER_ERROR.value, 'Error creating user')
+    except Exception as e:
+        return build_response(HTTPStatus.INTERNAL_SERVER_ERROR.value, f'Error checking user: {str(e)}')
+
+def handle_login_user(cognito_service: CognitoService, data: dict):
+    cpf = data.get('cpf')
+    if not cpf:
+        return build_response(HTTPStatus.BAD_REQUEST.value, 'Missing CPF')
+    
+    if not validate_cpf(cpf):
+        return build_response(HTTPStatus.BAD_REQUEST.value, 'Invalid CPF')
+    
+    try:
+        exists_user = cognito_service.exists_user_in_user_pool(cpf)
+        if exists_user is True:
+            return build_response(HTTPStatus.OK.value, 'User exists')
+        else:
+            return build_response(HTTPStatus.NOT_FOUND.value, 'User does not exist')
+    except Exception as e:
+        return build_response(HTTPStatus.INTERNAL_SERVER_ERROR.value, f'Error checking user: {str(e)}')
+
 def lambda_handler(event, context):
     data = json.loads(event['body'])
-
-    if 'name' in data and 'email' in data and 'birthdate' in data and 'cpf' in data:
-        user_pool_id = os.getenv('USER_POOL_ID')
-        if not user_pool_id:
-            return {
-                'statusCode': HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                'body': 'Server configuration error: USER_POOL_ID not set.'
-            }
-            
-        cognito_service = CognitoService(user_pool_id=user_pool_id)
-        
-        cpf = data.get('cpf')
-        try:
-            exists_user = cognito_service.exists_user_in_user_pool(cpf)
-            if exists_user is True:
-                return {
-                    'statusCode': HTTPStatus.CONFLICT.value,
-                    'body': 'User already exists, log in with CPF'
-                }
-            else:
-                new_user = cognito_service.create_user_in_user_pool(data)
-                if new_user is True:
-                    return {
-                        'statusCode': HTTPStatus.CREATED.value,
-                        'body': 'User created successfully'
-                    }
-        except Exception as e:
-            return {
-                'statusCode': HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                'body': f'Error checking user: {str(e)}'
-            }
     
-    elif 'cpf' in data and 'name' not in data and 'email' not in data and 'birthdate' not in data:
-        cpf = data.get('cpf')
+    is_create_user_data = set(data.keys()) == set(REQUIRED_FIELDS_CREATE_USER)
+    is_login_user_data = set(data.keys()) == set(REQUIRED_FIELDS_LOGIN_USER)
 
-        if not cpf:
-            return {
-                'statusCode': HTTPStatus.BAD_REQUEST.value,
-                'body': 'Missing CPF'
-            }
+    user_pool_id = os.getenv('USER_POOL_ID')
+    if not user_pool_id:
+        return build_response(HTTPStatus.INTERNAL_SERVER_ERROR.value, 'Server configuration error: USER_POOL_ID not set.')
         
-        if not validate_cpf(cpf):
-            return {
-                'statusCode': HTTPStatus.BAD_REQUEST.value,
-                'body': 'Invalid CPF'
-            }
+    cognito_service = CognitoService(user_pool_id=user_pool_id)
 
-        user_pool_id = os.getenv('USER_POOL_ID')
-        if not user_pool_id:
-            return {
-                'statusCode': HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                'body': 'Server configuration error: USER_POOL_ID not set.'
-            }
-            
-        cognito_service = CognitoService(user_pool_id=user_pool_id)
+    if is_create_user_data:       
+        return handle_create_user(cognito_service, data)
+    elif is_login_user_data:
+        return handle_login_user(cognito_service, data)
         
-        try:
-            exists_user = cognito_service.exists_user_in_user_pool(cpf)
-            if exists_user is True:
-                return {
-                    'statusCode': HTTPStatus.OK.value,
-                    'body': 'User exists'
-                }
-            else:
-                return {
-                    'statusCode': HTTPStatus.NOT_FOUND.value,
-                    'body': 'User does not exist'
-                }
-        except Exception as e:
-            return {
-                'statusCode': HTTPStatus.INTERNAL_SERVER_ERROR.value,
-                'body': f'Error checking user: {str(e)}'
-            }
-    return {
-        'statusCode': HTTPStatus.BAD_REQUEST.value,
-        'body': 'Invalid request format'
-    }
+    return build_response(HTTPStatus.BAD_REQUEST.value, 'Invalid request format')
