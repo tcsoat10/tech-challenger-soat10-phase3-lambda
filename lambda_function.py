@@ -47,7 +47,7 @@ def lambda_handler(event, context):
                 'body': f'Error checking user: {str(e)}'
             }
     
-    elif 'cpf' in data and not 'name' in data and not 'email' in data and not 'birthdate' in data:
+    elif 'cpf' in data and 'name' not in data and 'email' not in data and 'birthdate' not in data:
         cpf = data.get('cpf')
 
         if not cpf:
