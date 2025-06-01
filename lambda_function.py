@@ -57,8 +57,8 @@ def handle_login_user(cognito_service: CognitoService, data: dict):
 def lambda_handler(event, context):
     data = json.loads(event['body'])
     
-    is_create_user_data = set(data.keys()) == set(REQUIRED_FIELDS_CREATE_USER)
-    is_login_user_data = set(data.keys()) == set(REQUIRED_FIELDS_LOGIN_USER)
+    is_create_user_data = sorted(data.keys()) == sorted(REQUIRED_FIELDS_CREATE_USER)
+    is_login_user_data = sorted(data.keys()) == sorted(REQUIRED_FIELDS_LOGIN_USER)
 
     user_pool_id = os.getenv('USER_POOL_ID')
     if not user_pool_id:
