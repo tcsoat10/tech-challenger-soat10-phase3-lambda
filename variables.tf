@@ -3,7 +3,7 @@ variable "region" {
 }
 
 variable "lambda_function_name" {
-  default = "lambda_auth_test"
+  default = "lambda_auth"
 }
 
 variable "aws_role_arn" {
