@@ -2,9 +2,14 @@ import logging
 import boto3
 
 class CognitoService:
-    def __init__(self, user_pool_id: str):
+    def __init__(self):
         self.cognito_client = boto3.client('cognito-idp')
-        self.user_pool_id = user_pool_id
+        pools = self.cognito_client.get_paginator('list_user_pools')
+        for page in pools.paginate(MaxResults=60):
+            for pool in page['UserPools']:
+                if pool['Name'] == 'lambda_auth-user-pool':
+                    self.user_pool_id = pool['Id']
+                break
     
     def exists_user_in_user_pool(self, username: str):
         try:
