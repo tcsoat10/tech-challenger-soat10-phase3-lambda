@@ -49,7 +49,7 @@ resource "aws_cognito_user_pool_client" "user_pool_client" {
 
 # API Gateway HTTP API
 resource "aws_apigatewayv2_api" "http_api" {
-  name          = "${var.lambda_function_name}-http-api"
+  name          = "${var.lambda_function_name}"
   protocol_type = "HTTP"
 }
 
