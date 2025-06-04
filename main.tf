@@ -80,19 +80,3 @@ resource "aws_apigatewayv2_stage" "default" {
   name        = "$default"
   auto_deploy = true
 }
-
-output "lambda_function_name" {
-  value = aws_lambda_function.lambda_function.function_name
-}
-
-output "cognito_user_pool_id" {
-  value = aws_cognito_user_pool.user_pool.id
-}
-
-output "cognito_user_pool_client_id" {
-  value = aws_cognito_user_pool_client.user_pool_client.id
-}
-
-output "api_endpoint" {
-  value = aws_apigatewayv2_api.http_api.api_endpoint
-}
